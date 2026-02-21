@@ -1,0 +1,248 @@
+<!doctype html>
+<html lang="tr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>LEGO Kod Bulucu</title>
+    <style>
+      :root {
+        color-scheme: light;
+        --bg: #f4f7fb;
+        --card: #ffffff;
+        --text: #112240;
+        --muted: #5d6b82;
+        --accent: #d6001c;
+        --border: #dce3ed;
+      }
+
+      * { box-sizing: border-box; }
+
+      body {
+        margin: 0;
+        font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+        background: var(--bg);
+        color: var(--text);
+      }
+
+      .container {
+        max-width: 980px;
+        margin: 0 auto;
+        padding: 32px 16px 64px;
+      }
+
+      h1 { margin: 0 0 8px; font-size: clamp(1.8rem, 2.8vw, 2.4rem); }
+      .sub { color: var(--muted); margin: 0 0 24px; }
+
+      .card {
+        background: var(--card);
+        border: 1px solid var(--border);
+        border-radius: 14px;
+        padding: 18px;
+        box-shadow: 0 8px 22px rgb(17 34 64 / 0.06);
+      }
+
+      form {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        margin-bottom: 20px;
+      }
+
+      input {
+        flex: 1;
+        min-width: 220px;
+        padding: 12px 14px;
+        border: 1px solid #c8d1de;
+        border-radius: 10px;
+        font-size: 1rem;
+      }
+
+      button {
+        border: 0;
+        border-radius: 10px;
+        background: var(--accent);
+        color: #fff;
+        padding: 12px 16px;
+        font-weight: 600;
+        cursor: pointer;
+      }
+
+      #setResult h2 { margin: 4px 0; }
+      #setMeta { color: var(--muted); margin-bottom: 12px; }
+
+      .tips {
+        color: var(--muted);
+        font-size: 0.95rem;
+      }
+
+      .grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+        gap: 12px;
+        margin-top: 16px;
+      }
+
+      .alt {
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        padding: 12px;
+        background: #fcfdff;
+      }
+
+      .alt h3 {
+        margin: 0 0 10px;
+        font-size: 1rem;
+      }
+
+      .alt a {
+        display: inline-block;
+        margin-right: 10px;
+        margin-bottom: 8px;
+        color: #0d3b8f;
+        text-decoration: none;
+        font-size: 0.92rem;
+      }
+
+      .alt a:hover { text-decoration: underline; }
+      .hidden { display: none; }
+      .warning { color: #9f2f2f; }
+    </style>
+  </head>
+  <body>
+    <main class="container">
+      <h1>LEGO Kod Bulucu & Alternatif Fikirler</h1>
+      <p class="sub">
+        LEGO set kodunu gir, hangi set olduğunu gör ve o setle yapılabilecek alternatif modellerin video/klavuz
+        bağlantılarına ulaş.
+      </p>
+
+      <section class="card">
+        <form id="searchForm">
+          <input
+            id="setCode"
+            name="setCode"
+            type="text"
+            placeholder="Örnek: 10696"
+            autocomplete="off"
+          />
+          <button type="submit">Kodu Bul</button>
+        </form>
+
+        <div id="setResult" class="hidden">
+          <h2 id="setName"></h2>
+          <div id="setMeta"></div>
+          <p id="setDescription"></p>
+        </div>
+
+        <p id="warning" class="warning hidden"></p>
+
+        <div id="alternatives" class="hidden">
+          <h2>Bu set ile yapılabilecek alternatifler</h2>
+          <p class="tips">YouTube araması ve yapım klavuzu araması için hızlı bağlantılar:</p>
+          <div id="altGrid" class="grid"></div>
+        </div>
+      </section>
+    </main>
+
+    <script>
+      const legoCatalog = {
+        "10696": {
+          name: "LEGO Classic Orta Boy Yaratıcı Yapım Kutusu",
+          pieces: 484,
+          year: 2015,
+          description:
+            "Renkli temel parçalar içeren klasik kutu. Araba, bina, hayvan, robot gibi çok sayıda serbest model için kullanılabilir.",
+          alternatives: [
+            { title: "Araba", query: "LEGO 10696 car instructions" },
+            { title: "Buzdolabı / Beyaz Eşya", query: "LEGO 10696 refrigerator build" },
+            { title: "Polis Arabası", query: "LEGO 10696 police car tutorial" },
+            { title: "Hastane", query: "LEGO 10696 hospital building" },
+            { title: "İtfaiye Binası", query: "LEGO 10696 fire station instructions" },
+            { title: "Ev / Apartman", query: "LEGO 10696 house tutorial" }
+          ]
+        },
+        "11005": {
+          name: "LEGO Classic Yaratıcı Eğlence",
+          pieces: 900,
+          year: 2019,
+          description:
+            "Geniş parça çeşitliliği ve tekerlek gibi ek parçalar ile araç ve bina modellerine uygun yaratıcı set.",
+          alternatives: [
+            { title: "Tren", query: "LEGO 11005 train tutorial" },
+            { title: "Dinozor", query: "LEGO 11005 dinosaur build" },
+            { title: "Helikopter", query: "LEGO 11005 helicopter instructions" }
+          ]
+        }
+      };
+
+      const form = document.getElementById("searchForm");
+      const input = document.getElementById("setCode");
+      const setResult = document.getElementById("setResult");
+      const alternatives = document.getElementById("alternatives");
+      const warning = document.getElementById("warning");
+      const altGrid = document.getElementById("altGrid");
+
+      function youtubeLink(query) {
+        return `https://www.youtube.com/results?search_query=${encodeURIComponent(query)}`;
+      }
+
+      function guideLink(query) {
+        return `https://www.google.com/search?q=${encodeURIComponent(query + " pdf instructions")}`;
+      }
+
+      function showSet(setCode) {
+        const data = legoCatalog[setCode];
+        altGrid.innerHTML = "";
+        warning.classList.add("hidden");
+
+        if (!data) {
+          setResult.classList.add("hidden");
+          alternatives.classList.remove("hidden");
+          warning.classList.remove("hidden");
+          warning.textContent =
+            `Bu kod yerel katalogda bulunamadı: ${setCode}. Yine de otomatik arama bağlantılarını kullanabilirsin.`;
+
+          const defaultIdeas = ["car", "house", "police", "hospital", "fire station"];
+          defaultIdeas.forEach((idea) => {
+            const q = `LEGO ${setCode} ${idea} instructions`;
+            altGrid.insertAdjacentHTML(
+              "beforeend",
+              `<article class="alt"><h3>${idea.toUpperCase()}</h3><a target="_blank" rel="noopener" href="${youtubeLink(
+                q
+              )}">YouTube videoları</a><a target="_blank" rel="noopener" href="${guideLink(
+                q
+              )}">Klavuz araması</a></article>`
+            );
+          });
+          return;
+        }
+
+        document.getElementById("setName").textContent = `${setCode} · ${data.name}`;
+        document.getElementById("setMeta").textContent = `${data.pieces} parça · ${data.year}`;
+        document.getElementById("setDescription").textContent = data.description;
+        setResult.classList.remove("hidden");
+        alternatives.classList.remove("hidden");
+
+        data.alternatives.forEach((item) => {
+          altGrid.insertAdjacentHTML(
+            "beforeend",
+            `<article class="alt"><h3>${item.title}</h3><a target="_blank" rel="noopener" href="${youtubeLink(
+              item.query
+            )}">YouTube videoları</a><a target="_blank" rel="noopener" href="${guideLink(
+              item.query
+            )}">Klavuz araması</a></article>`
+          );
+        });
+      }
+
+      form.addEventListener("submit", (event) => {
+        event.preventDefault();
+        const setCode = input.value.trim();
+        if (!setCode) return;
+        showSet(setCode);
+      });
+
+      showSet("10696");
+    </script>
+  </body>
+</html>
